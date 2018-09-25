@@ -17,9 +17,9 @@ install:
 ```git clone https://github.com/Telesud/TelesudTab
 cd Telesud*
 chmod +x Telesud
-./Telesud install```
+./Telesud install
 
-#Edit config.lua file:👇
+#Edit config.lua file:
 
 ./Telesud create```
 
