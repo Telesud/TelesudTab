@@ -14,23 +14,27 @@
 ---------------------------------
 #install the bot
 install:
-```git clone https://github.com/Telesud/TelesudTab
+```
+git clone https://github.com/Telesud/TelesudTab
 cd Telesud*
 chmod +x Telesud
 ./Telesud install
 
 #Edit config.lua file:
 
-./Telesud create```
+./Telesud create
+```
 
 ###
 
 #lunch one bot:
 
-```cd Telesud*
+```
+cd Telesud*
 tmux
 👇
-screen ./Telesud launch 1```
+screen ./Telesud launch 1
+```
 
 
 #lunch the bot all
