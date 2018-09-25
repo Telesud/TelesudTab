@@ -18,7 +18,8 @@ install:
 cd Telesud*
 chmod +x Telesud
 ./Telesud install```
-Edit config.lua file:
+
+#Edit config.lua file:
 ```./Telesud create
 ```
 
