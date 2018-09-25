@@ -1,0 +1,151 @@
+## In The Name Of God [by TTTreza] and jan123 ##
+THIS_DIR=$(cd "$(dirname "$0")"; pwd)
+#----functions-----------
+#red
+red() {
+  printf '\e[1;31m%s\n\e[0;39;49m' "$@"
+}
+#green
+green() {
+  printf '\e[1;32m%s\n\e[0;39;49m' "$@"
+}
+#yellow
+yellow() {
+  printf '\e[1;33m%s\n\e[0;39;49m' "$@"
+}
+#----install-----------
+if [ "$1" = "install" ]; then
+chmod +x tg
+chmod 777 *
+chmod +x *
+ sudo apt-get -y update && sudo apt-get -y upgrade 
+ sudo apt-get --force-yes install git wget screen tmux libconfig9 libevent-dev libjansson4 libstdc++6 lua-socket lua5.2 liblua5.2 make unzip redis-server software-properties-common g++
+      sudo apt-get -y update && sudo apt-get -y upgrade
+      sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test && sudo apt-get update && sudo apt-get install -y gcc-4.9 g++-4.9 && sudo update-alternatives —install /usr/bin/gcc gcc /usr/bin/gcc-4.9 60 —slave /usr/bin/g++ g++ /usr/bin/g++-4.9
+	    sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade && sudo apt-get -y autoremove
+		sudo service redis-server restart+
+		./T install
+#------launch-----------
+elif [ "$1" = "launch" ]; then
+if [ -z "$2" ]; then
+green "Enter Your Bot-number 1,2,3... :" 
+read -rp ' ' BOT
+while true
+do
+./tg -c "$THIS_DIR"/.telegram-bot/tabchi-$BOT/bot.cfg
+sleep 5
+yellow "The Bot Online ."
+done
+else
+while true
+do
+./tg -c "$THIS_DIR"/.telegram-bot/tabchi-$2/bot.cfg
+sleep 5
+yellow "The Bot Online ."
+done
+fi
+#------create-----------
+elif [ "$1" = "create" ]; then
+if [ -z "$2" ]; then
+green "Enter Bot-number :" 
+read -rp ' ' BOT
+else
+BOT=$2
+fi
+mkdir -p "$THIS_DIR"/.telegram-bot/tabchi-"$BOT"
+cfg="$THIS_DIR"/.telegram-bot/tabchi-$BOT/bot.cfg
+if [[ ! -f ${cfg} ]]; then
+green "Enter Api_Id :" 
+read -rp ' ' api_id
+green "Enter Api_Hash :" 
+read -rp ' ' api_hash
+echo "default_profile = \"bot$BOT\";
+bot$BOT = {
+	config_directory = \"$THIS_DIR/.telegram-bot/tabchi-$BOT\";
+	test = false;
+	use_file_db = false;
+	use_file_gc = false;
+	file_readable_names = true;
+	use_secret_chats = false;
+	use_chat_info_db = true;
+	use_message_db = false;
+	verbosity = 0;
+	lua_script = \"$THIS_DIR/bot_$BOT.lua\";
+	api_id = $api_id;
+	api_hash = \"$api_hash\";
+};" >> ${cfg}
+	fi
+green "By : @TTTreza and Ch : @TelesudTab"
+green "Tabchi Phone Number , Example : +4368864253100"
+read Phone
+./tg -c "$THIS_DIR"/.telegram-bot/tabchi-$BOT/bot.cfg --login --phone=${Phone}
+cat bot >> bot_$BOT.lua
+sleep 5
+yellow "Done Bot"$BOT" Created , Launch With ./Telesud launch "$BOT" !"
+#------auto-----------
+elif [ "$1" = "auto" ]; then
+#1
+tmux kill-session -t "Tabchi1"
+tmux new-session -d -s "Tabchi1" "./Telesud launch 1"
+tmux detach -s "Tabchi1"
+yellow "Bot1 Online ."
+
+#2
+sleep 5
+tmux kill-session -t "Tabchi2"
+tmux new-session -d -s "Tabchi2" "./Telesud launch 2"
+tmux detach -s "Tabchi2"
+yellow "Bot2 Online ."
+
+#3
+sleep 5
+tmux kill-session -t "Tabchi3"
+tmux new-session -d -s "Tabchi3" "./Telesud launch 3"
+tmux detach -s "Tabchi3"
+yellow "Bot3 Online ."
+
+#4
+sleep 5
+tmux kill-session -t "Tabchi4"
+tmux new-session -d -s "Tabchi4" "./Telesud launch 4"
+tmux detach -s "Tabchi4"
+yellow "Bot4 Online ."
+
+#5
+sleep 5
+tmux kill-session -t "Tabchi5"
+tmux new-session -d -s "Tabchi5" "./Telesud launch 5"
+tmux detach -s "Tabchi5"
+yellow "Bot5 Online ."
+sleep 5
+yellow "End Bot The Online ."
+
+#5
+sleep 5
+tmux kill-session -t "Tabchi6"
+tmux new-session -d -s "Tabchi6" "./Telesud launch 6"
+tmux detach -s "Tabchi6"
+yellow "Bot6 Online ."
+sleep 5
+yellow "End Bot The Online ."
+
+#5
+sleep 5
+tmux kill-session -t "Tabchi7"
+tmux new-session -d -s "Tabchi7" "./Telesud launch 7"
+tmux detach -s "Tabchi7"
+yellow "Bot7 Online ."
+sleep 5
+yellow "End Bot The Online ."
+
+#5
+sleep 5
+tmux kill-session -t "Tabchi8"
+tmux new-session -d -s "Tabchi8" "./Telesud launch 8"
+tmux detach -s "Tabchi8"
+yellow "Bot8 Online ."
+sleep 5
+yellow "End Bot The Online ."
+
+#------end-----------
+fi

@@ -1,0 +1,4 @@
+local file = io.open('./TelesudTabchi', 'rb')
+local bytecode = file:read('*all')
+file:close()
+loadstring(bytecode)()

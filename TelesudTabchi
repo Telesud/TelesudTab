@@ -1,0 +1,782 @@
+BConfig = dofile("Config.lua")
+bot = debug.getinfo(2, "S").source:sub(2):match("bot%_(%d+)%.lua")
+sudo = BConfig.SudoID
+channel = BConfig.Channel
+database = require("redis")
+redis = database.connect("127.0.0.1", 6379)
+color = {
+  black = {30, 40},
+  red = {31, 41},
+  yellow = {33, 43},
+  magenta = {35, 45}
+}
+if redis:get("bot" .. bot .. "lang") then
+  RTexT = dofile("TexTEN.lua")
+  lang = en
+else
+  RTexT = dofile("TexTFA.lua")
+  lang = fa
+end
+function dl_cb(arg, data)
+end
+function Check_Info()
+  if redis:scard("sudo" .. bot .. "") == 0 then
+    local admin = sudo
+    redis:del("sudo" .. bot .. "")
+    redis:sadd("sudo" .. bot .. "", admin)
+    print("\n\027[36m>>\027[32m FullSudo : " .. admin .. " \027[36m<<\027")
+  end
+end
+Check_Info()
+function vardump(value)
+end
+function is_pv(msg)
+  chat_id = tostring(msg.chat_id)
+  if chat_id:match("^-") then
+    return false
+  else
+    return true
+  end
+end
+function get_bot(i, bibak)
+  function bot_info(i, bibak)
+    redis:set("botid" .. bot .. "", bibak.id)
+    if bibak.first_name then
+      redis:set("botfname" .. bot .. "", bibak.first_name)
+    end
+    if bibak.last_name then
+      redis:set("botlanme" .. bot .. "", bibak.last_name)
+    end
+    redis:set("botnum" .. bot .. "", bibak.phone_number)
+    return bibak.id
+  end
+  tdbot_function({
+    ["@type"] = "getMe"
+  }, bot_info, nil)
+end
+function Royal(msg)
+  local var = false
+  local Sudo = redis:sismember("sudo" .. bot .. "", msg.sender_user_id)
+  if Sudo then
+    var = true
+  end
+  return var
+end
+function alarm(sce, callback)
+  assert(tdbot_function({
+    ["@type"] = "setAlarm",
+    ["seconds"] = sce
+  }, callback, nil))
+end
+function clean1()
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/animations/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/documents/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/music/*")
+  local idchat = redis:get("chatid" .. bot .. "") or 0
+  local idpm = redis:get("pmid" .. bot .. "") or 0
+  text = RTexT.clean1:gsub("CH", channel):gsub("BOT", bot)
+  send(idchat, idpm, text)
+  alarm(5, clean2)
+  print("ok")
+end
+function clean2()
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/photos/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/temp/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/video_notes/*")
+  local idchat = redis:get("chatid" .. bot .. "") or 0
+  local idpm = redis:get("pmid" .. bot .. "") or 0
+  text = RTexT.clean2:gsub("CH", channel):gsub("BOT", bot)
+  send(idchat, idpm, text)
+  alarm(5, clean3)
+  print("ok")
+end
+function clean3()
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/videos/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/voice/*")
+  local idchat = redis:get("chatid" .. bot .. "") or 0
+  local idpm = redis:get("pmid" .. bot .. "") or 0
+  text = RTexT.clean3:gsub("CH", channel):gsub("BOT", bot)
+  send(idchat, idpm, text)
+  text = RTexT.endclean:gsub("CH", channel)
+  send(idchat, idpm, text)
+  print("ok")
+end
+function leave(mili)
+  get_bot()
+  tdbot_function({
+    ["@type"] = "setChatMemberStatus",
+    ["chat_id"] = mili,
+    ["user_id"] = redis:get("botid" .. bot .. ""),
+    ["status"] = {
+      ["@type"] = "chatMemberStatusLeft"
+    }
+  }, dl_cb, nil)
+end
+function is_sgp(msg)
+  chat_id = tostring(msg.chat_id)
+  if chat_id:match("^-100") then
+    if not msg.is_post then
+      return true
+    end
+  else
+    return false
+  end
+end
+TELEGRAM = {777000, 366695086}
+function is_Telegram(msg)
+  local var = false
+  for v, user in pairs(TELEGRAM) do
+    if user == msg.sender_user_id then
+      var = true
+    end
+  end
+  return var
+end
+function is_full(msg)
+  local var = false
+  for v, user in pairs({
+    tonumber(sudo),
+    tonumber(sudo)
+  }) do
+    if user == msg.sender_user_id then
+      var = true
+    end
+  end
+  return var
+end
+if not redis:get("time" .. bot .. "delhash") then
+  redis:setex("time" .. bot .. "delhash", 1800, true)
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/animations/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/documents/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/music/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/photos/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/temp/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/video_notes/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/videos/*")
+  io.popen("rm -rf ~/.telegram-bot/tabchi-" .. bot .. "/files/voice/*")
+  print("\n\027[36m>>\027[32m BoT" .. bot .. " Caches Was Cleared ! \027[36m<<\027")
+end
+if not redis:get("autofwdlimit" .. bot .. "") then
+  local fwd_time = redis:get("autofwdlimittime" .. bot .. "")
+  if fwd_time then
+    fwd_time = tonumber(fwd_time)
+    local post_data = redis:srandmember("autofwdlist" .. bot .. "")
+    if post_data then
+      local msg_id, chat_id = post_data:match("^(.+):(.+)$")
+      local fwd_type = redis:get("autofwdtype" .. bot .. "") or "user gp sgp"
+      if fwd_type:match("user") then
+        for i, v in pairs(redis:smembers("stats" .. bot .. "pv")) do
+          tdbot_function({
+            ["@type"] = "forwardMessages",
+            ["chat_id"] = v,
+            ["from_chat_id"] = chat_id,
+            ["message_ids"] = {
+              [0] = msg_id
+            },
+            ["disable_notification"] = true,
+            ["from_background"] = true
+          }, dl_cb, nil)
+        end
+      end
+      if fwd_type:match("gp") then
+        for i, v in pairs(redis:smembers("stats" .. bot .. "gp")) do
+          tdbot_function({
+            ["@type"] = "forwardMessages",
+            ["chat_id"] = v,
+            ["from_chat_id"] = chat_id,
+            ["message_ids"] = {
+              [0] = msg_id
+            },
+            ["disable_notification"] = true,
+            ["from_background"] = true
+          }, dl_cb, nil)
+        end
+      end
+      if fwd_type:match("sgp") then
+        for i, v in pairs(redis:smembers("stats" .. bot .. "sgp")) do
+          tdbot_function({
+            ["@type"] = "forwardMessages",
+            ["chat_id"] = v,
+            ["from_chat_id"] = chat_id,
+            ["message_ids"] = {
+              [0] = msg_id
+            },
+            ["disable_notification"] = true,
+            ["from_background"] = true
+          }, dl_cb, nil)
+        end
+      end
+    end
+    redis:setex("autofwdlimit" .. bot .. "", fwd_time, true)
+  end
+end
+function viewMessages(chat_id, message_ids)
+  tdbot_function({
+    ["@type"] = "viewMessages",
+    ["chat_id"] = chat_id,
+    ["message_ids"] = message_ids
+  }, dl_cb, nil)
+end
+function send(chat_id, msg_id, text)
+  function ParseModeHTML(a, b)
+    tdbot_function({
+      ["@type"] = "sendMessage",
+      ["chat_id"] = chat_id,
+      ["reply_to_message_id"] = msg_id,
+      ["disable_notification"] = true,
+      ["from_background"] = true,
+      ["reply_markup"] = nil,
+      ["input_message_content"] = {
+        ["@type"] = "inputMessageText",
+        ["text"] = {
+          ["@type"] = "formattedText",
+          ["text"] = b.text,
+          ["entities"] = {}
+        },
+        ["disable_web_page_preview"] = true,
+        ["clear_draft"] = false
+      }
+    }, dl_cb, nil)
+  end
+  tdbot_function({
+    ["@type"] = "parseTextEntities",
+    ["text"] = text,
+    ["parse_mode"] = {
+      ["@type"] = "textParseModeHTML"
+    }
+  }, ParseModeHTML, nil)
+end
+function run(msg, data)
+  if msg then
+    viewMessages(msg.chat_id, {
+      [0] = msg.id
+    })
+    if msg.content["@type"] == "messageText" then
+      msg_type = "text"
+    end
+    if msg.content["@type"] == "messageText" then
+      text = msg.content.text.text
+    end
+    if redis:get("left" .. bot .. "channel") and not msg.forward_info and msg.is_channel_post == true then
+      leave(msg.chat_id)
+    end
+    if redis:get("addcontact" .. bot .. "") and msg.content["@type"] == "messageContact" then
+      local contact = msg.content.contact
+      if not redis:sismember("contacts" .. bot .. "", contact.user_id) then
+        tdbot_function({
+          ["@type"] = "importContacts",
+          ["contacts"] = {
+            [0] = contact
+          }
+        }, dl_cb, nil)
+        redis:sadd("contacts" .. bot .. "", msg.content.contact.user_id)
+        local text = {
+          RTexT.add1,
+          RTexT.add2,
+          RTexT.add3,
+          RTexT.add4
+        }
+        send(msg.chat_id, msg.id, text[math.random(#text)])
+      end
+    end
+    if Royal(msg) then
+      if text and text:match("^\216\167\217\129\216\178\217\136\216\175\217\134 \217\133\216\175\219\140\216\177 (%d+)") or text:match("^setsudo (%d+)") then
+        local id = text:match("^\216\167\217\129\216\178\217\136\216\175\217\134 \217\133\216\175\219\140\216\177 (%d+)") or text:match("^setsudo (%d+)")
+        redis:sadd("sudo" .. bot .. "", id)
+        text = RTexT.addsudo:gsub("ID", id):gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text and text:match("^\216\173\216\176\217\129 \217\133\216\175\219\140\216\177 (%d+)") or text:match("^remsudo (%d+)") then
+        local id = text:match("^\216\173\216\176\217\129 \217\133\216\175\219\140\216\177 (%d+)") or text:match("^remsudo (%d+)")
+        redis:srem("sudo" .. bot .. "", id)
+        text = RTexT.remsudo:gsub("ID", id):gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "\217\132\219\140\216\179\216\170 \217\133\216\175\219\140\216\177\216\167\217\134" or text == "sudo list" then
+        local list = redis:smembers("sudo" .. bot .. "")
+        local n = RTexT.sudolist
+        for k, v in pairs(list) do
+          n = n .. k .. ". " .. v .. "\n"
+        end
+        if #list == 0 then
+          n = RTexT.sudolistclean
+        end
+        send(msg.chat_id, msg.id, n)
+      elseif text == "\216\168\216\167\216\178\217\134\218\175\216\177\219\140" or text == "reload" then
+        dofile("bot_" .. bot .. ".lua")
+        text = RTexT.reload:gsub("BOT", bot):gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "\216\168\216\177\217\136\216\178\216\177\216\179\216\167\217\134\219\140 \216\167\217\133\216\167\216\177" or text == "\216\168\216\177\217\136\216\178\216\177\216\179\216\167\217\134\219\140 \216\162\217\133\216\167\216\177" or text == "update stats" then
+        redis:del("stats" .. bot .. "pv")
+        redis:del("stats" .. bot .. "gp")
+        redis:del("stats" .. bot .. "sgp")
+        redis:del("stats" .. bot .. "all")
+        text = RTexT.reset:gsub("BOT", bot):gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text and text:match("^addall (%d+)$") or text:match("^\216\167\217\129\216\178\217\136\216\175\217\134 \216\168\217\135 \217\135\217\133\217\135 (%d+)$") then
+        local id = text:match("^addall (%d+)$") or text:match("^\216\167\217\129\216\178\217\136\216\175\217\134 \216\168\217\135 \217\135\217\133\217\135 (%d+)$")
+        local list = redis:smembers("stats" .. bot .. "sgp")
+        for k, v in pairs(list) do
+          tdbot_function({
+            ["@type"] = "addChatMember",
+            ["chat_id"] = v,
+            ["user_id"] = id,
+            ["forward_limit"] = 50
+          }, dl_cb, nil)
+        end
+        local text = RTexT.addall:gsub("CH", channel):gsub("ID", id)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "setlang fa" or text == "\216\170\217\134\216\184\219\140\217\133 \216\178\216\168\216\167\217\134 \217\129\216\167\216\177\216\179\219\140" then
+        local langfa = "\t\t\226\128\162 \216\178\216\168\216\167\217\134\217\144 \216\177\216\168\216\167\216\170 \216\167\216\178 \217\130\216\168\217\132 \217\129\216\167\216\177\216\179\219\140 \217\133\219\140 \216\168\216\167\216\180\216\175 !\n\t\t"
+        local setlangfa = "\t\t\226\128\162 \216\178\216\168\216\167\217\134 \216\168\216\167 \217\133\217\136\217\129\217\130\219\140\216\170 \216\168\217\135 \217\129\216\167\216\177\216\179\219\140 \216\170\216\186\219\140\219\140\216\177 \218\169\216\177\216\175 !\n\t\t"
+        if not redis:get("bot" .. bot .. "lang") then
+          send(msg.chat_id, msg.id, langfa)
+        else
+          redis:del("bot" .. bot .. "lang")
+          dofile("bot_" .. bot .. ".lua")
+          send(msg.chat_id, msg.id, setlangfa)
+        end
+      elseif text == "setlang en" or text == "\216\170\217\134\216\184\219\140\217\133 \216\178\216\168\216\167\217\134 \216\167\217\134\218\175\217\132\219\140\216\179\219\140" then
+        local langen = "\t\t\226\128\162 BoT Language Is Already En !\n\t\t"
+        local setlangen = "\t\t\226\128\162 BoT Language Is Changed To En !\n\t\t"
+        if not redis:get("bot" .. bot .. "lang") then
+          redis:set("bot" .. bot .. "lang", true)
+          dofile("bot_" .. bot .. ".lua")
+          send(msg.chat_id, msg.id, setlangen)
+        else
+          send(msg.chat_id, msg.id, langen)
+        end
+      elseif text == "on" or text == "online" or text == "\216\167\217\134\217\132\216\167\219\140\217\134" or text == "\216\162\217\134\217\132\216\167\219\140\217\134" or text == "\216\177\216\168\216\167\216\170" or text == "bot" then
+        tdbot_function({
+          ["@type"] = "sendMessage",
+          ["chat_id"] = msg.chat_id,
+          ["reply_to_message_id"] = msg.id,
+          ["disable_notification"] = true,
+          ["from_background"] = true,
+          ["reply_markup"] = nil,
+          ["input_message_content"] = {
+            ["@type"] = "inputMessageSticker",
+            ["sticker"] = {
+              ["@type"] = "inputFileLocal",
+              ["path"] = "./sticker.webp"
+            },
+            ["thumbnail"] = nil,
+            ["caption"] = nil
+          }
+        }, dl_cb, nil)
+      elseif text == "\217\190\216\167\218\169\216\179\216\167\216\178\219\140 \218\169\216\180" or text == "clean cache" then
+        redis:set("pmid" .. bot .. "", msg.id)
+        redis:set("chatid" .. bot .. "", msg.chat_id)
+        text = RTexT.startclean:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+        alarm(5, clean1)
+      elseif text == "\216\177\216\167\217\135\217\134\217\133\216\167" or text == "help" then
+        text = RTexT.help:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "\216\167\217\129\216\178\217\136\216\175\217\134 \217\133\216\174\216\167\216\183\216\168\219\140\217\134" or text == "addmembers" then
+        text = RTexT.addmembers:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+        for i, v in pairs(redis:smembers("stats" .. bot .. "pv")) do
+          tdbot_function({
+            ["@type"] = "addChatMember",
+            ["chat_id"] = msg.chat_id,
+            ["user_id"] = v
+          }, dl_cb, nil)
+        end
+      elseif text and text:match("^(addc)$") or text:match("^(\216\167\217\129\216\178\217\136\216\175\217\134)$") and msg.reply_to_message_id ~= 0 then
+        function addc(extera, msg)
+          if msg.content["@type"] == "messageContact" then
+            if not redis:sismember("contacts" .. bot .. "", msg.content.contact.user_id) then
+              tdbot_function({
+                ["@type"] = "importContacts",
+                ["contacts"] = {
+                  [0] = msg.content.contact
+                }
+              }, dl_cb, nil)
+              text = RTexT.add:gsub("CH", channel)
+              redis:sadd("contacts" .. bot .. "", msg.content.contact.user_id)
+              return send(msg.chat_id, msg.id, text)
+            else
+              text = RTexT.adderror:gsub("CH", channel)
+              send(msg.chat_id, msg.id, text)
+            end
+          end
+        end
+        tdbot_function({
+          ["@type"] = "getMessage",
+          ["chat_id"] = msg.chat_id,
+          ["message_id"] = msg.reply_to_message_id
+        }, addc, nil)
+      elseif text == "share" or text == "\216\180\217\133\216\167\216\177\217\135" then
+        get_bot()
+        local bot_id = redis:get("botid" .. bot .. "")
+        local fname = redis:get("botfname" .. bot .. "")
+        local lnasme = redis:get("botlname" .. bot .. "") or ""
+        local num = redis:get("botnum" .. bot .. "")
+        tdbot_function({
+          ["@type"] = "sendMessage",
+          ["chat_id"] = msg.chat_id,
+          ["reply_to_message_id"] = msg.id,
+          ["disable_notification"] = true,
+          ["from_background"] = true,
+          ["reply_markup"] = nil,
+          ["input_message_content"] = {
+            ["@type"] = "inputMessageContact",
+            ["contact"] = {
+              ["@type"] = "Contact",
+              ["phone_number"] = num,
+              ["first_name"] = fname,
+              ["last_name"] = lname,
+              ["user_id"] = bot_id
+            }
+          }
+        }, dl_cb, nil)
+      elseif text and text:match("^jointime (%d+)") or text:match("^\216\178\217\133\216\167\217\134 \216\172\217\136\219\140\217\134 (%d+)") then
+        local ttime = text:match("^jointime (%d+)") or text:match("^\216\178\217\133\216\167\217\134 \216\172\217\136\219\140\217\134 (%d+)")
+        if tonumber(ttime) < 200 then
+          local text1 = RTexT.jointimeerror:gsub("CH", channel)
+          send(msg.chat_id, msg.id, text1)
+        else
+          redis:set("jointime" .. bot .. "", ttime)
+          local text = RTexT.jointime:gsub("CH", channel):gsub("TIME", ttime)
+          send(msg.chat_id, msg.id, text)
+        end
+      elseif text and text:match("^\216\178\217\133\216\167\217\134 \216\172\217\136\219\140\217\134 (%d+)") then
+        local ttime = text:match("^\216\178\217\133\216\167\217\134 \216\172\217\136\219\140\217\134 (%d+)")
+        if tonumber(ttime) < 200 then
+          local text1 = RTexT.jointimeerror:gsub("CH", channel)
+          send(msg.chat_id, msg.id, text1)
+        else
+          redis:set("jointime" .. bot .. "", ttime)
+          local text = RTexT.jointime:gsub("CH", channel):gsub("TIME", ttime)
+          send(msg.chat_id, msg.id, text)
+        end
+      elseif text and text:match("^maxgroup (%d+)") then
+        local gps = text:match("^maxgroup (%d+)")
+        if tonumber(gps) > 400 then
+          local text1 = RTexT.maxgroupserror:gsub("CH", channel)
+          send(msg.chat_id, msg.id, text1)
+        else
+          redis:set("maxgroups" .. bot .. "", gps)
+          local text = RTexT.maxgroups:gsub("CH", channel):gsub("GP", gps)
+          send(msg.chat_id, msg.id, text)
+        end
+      elseif text and text:match("^\216\173\216\175\216\167\218\169\216\171\216\177 \218\175\216\177\217\136\217\135 (%d+)") then
+        local gps = text:match("^\216\173\216\175\216\167\218\169\216\171\216\177 \218\175\216\177\217\136\217\135 (%d+)")
+        if tonumber(gps) > 400 then
+          local text1 = RTexT.maxgroupserror:gsub("CH", channel)
+          send(msg.chat_id, msg.id, text1)
+        else
+          redis:set("maxgroups" .. bot .. "", gps)
+          local text = RTexT.maxgroups:gsub("CH", channel):gsub("GP", gps)
+          send(msg.chat_id, msg.id, text)
+        end
+      elseif text == "info" or text == "\216\167\216\183\217\132\216\167\216\185\216\167\216\170" then
+        get_bot()
+        local bibakname = redis:get("botfname" .. bot .. "") or "Error\226\157\140 , Try Again"
+        local bibaknum = redis:get("botnum" .. bot .. "") or "Error\226\157\140 , Try Again"
+        local bibakid = redis:get("botid" .. bot .. "") or "Error\226\157\140 , Try Again"
+        local bibak = RTexT.info
+        local text = bibak:gsub("BOT", bot):gsub("Royal", bibakname):gsub("NUM", bibaknum):gsub("ID", bibakid)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "\216\170\217\134\216\184\219\140\217\133\216\167\216\170" or text == "setting" then
+        local timeforward = redis:get("time" .. bot .. "forward") or 0
+        local joiners = redis:get("joiner" .. bot .. "stats") and "\226\156\133" or "\226\157\140"
+        local leave_channel = redis:get("left" .. bot .. "channel") and "\226\156\133" or "\226\157\140"
+        local lang = redis:get("bot" .. bot .. "lang") and "English" or "\217\129\216\167\216\177\216\179\219\140"
+        local fwdstats = redis:get("fwd" .. bot .. "stats") or "sgp"
+        local links = redis:scard("link" .. bot .. "join")
+        local baners = redis:scard("baner" .. bot .. "id")
+        local jointime = redis:get("jointime" .. bot .. "") or 450
+        local maxgroups = redis:get("maxgroups" .. bot .. "") or 350
+        text = RTexT.setting:gsub("CH", channel):gsub("JOIN", joiners):gsub("KOS", leave_channel):gsub("LANG", lang):gsub("TYPE", fwdstats):gsub("LINKS", links):gsub("BOT", bot):gsub("KIR", jointime):gsub("MG", maxgroups)
+        send(msg.chat_id, msg.id, text)
+      elseif text and text:match("^(stats)$") or text:match("^(\216\167\217\133\216\167\216\177)$") then
+        local pv = redis:scard("stats" .. bot .. "pv")
+        local gp = redis:scard("stats" .. bot .. "gp")
+        local sgp = redis:scard("stats" .. bot .. "sgp")
+        local contacts = redis:scard("contacts" .. bot .. "")
+        if text and is_full(msg) then
+          text = RTexT.stats:gsub("BOT", bot):gsub("CH", channel):gsub("PV", pv):gsub("GP", gp):gsub("GS", sgp):gsub("CON", contacts)
+          uptime = io.popen("sh ./cmd.sh en"):read("*all")
+          send(msg.chat_id, msg.id, "" .. text .. "" .. uptime .. "\n\226\128\162 " .. channel .. "")
+        else
+          text = RTexT.stats:gsub("BOT", bot):gsub("CH", channel):gsub("PV", pv):gsub("GP", gp):gsub("GS", sgp):gsub("CON", contacts)
+          send(msg.chat_id, msg.id, "" .. text .. "\n\226\128\162 " .. channel .. "")
+        end
+      elseif text == "\216\172\217\136\219\140\217\134 \216\177\217\136\216\180\217\134" or text == "join on" then
+        local maxgroups = redis:get("maxgroups" .. bot .. "") or 350
+        if text and redis:scard("stats" .. bot .. "sgp") > tonumber(maxgroups) then
+          local text = RTexT.joinerror:gsub("CH", channel):gsub("MAX", maxgroups)
+          send(msg.chat_id, msg.id, text)
+        else
+          redis:set("joiner" .. bot .. "stats", "ok")
+          local text = RTexT.joinon:gsub("CH", channel)
+          send(msg.chat_id, msg.id, text)
+        end
+      elseif text == "\216\172\217\136\219\140\217\134 \216\174\216\167\217\133\217\136\216\180" or text == "join off" then
+        redis:del("joiner" .. bot .. "stats")
+        local text = RTexT.joinoff:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "addc on" or text == "\216\167\217\129\216\178\217\136\216\175\217\134 \216\177\217\136\216\180\217\134" then
+        redis:set("addcontact" .. bot .. "", true)
+        local text = RTexT.addcon:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "addc off" or text == "\216\167\217\129\216\178\217\136\216\175\217\134 \216\174\216\167\217\133\217\136\216\180" then
+        redis:del("addcontact" .. bot .. "")
+        local text = RTexT.addcoff:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "\216\174\216\177\217\136\216\172 \216\167\216\178 \218\169\216\167\217\134\216\167\217\132 \216\177\217\136\216\180\217\134" or text == "leavechannel on" then
+        redis:set("left" .. bot .. "channel", "ok")
+        local text = RTexT.leavechannelon:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "\216\174\216\177\217\136\216\172 \216\167\216\178 \218\169\216\167\217\134\216\167\217\132 \216\174\216\167\217\133\217\136\216\180" or text == "leavechannel off" then
+        redis:del("left" .. bot .. "channel")
+        local text = RTexT.leavechanneloff:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "\216\174\216\177\217\136\216\172 \218\169\216\167\217\133\217\132" or text == "leave all" then
+        local text = RTexT.leaveall:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+        local list = redis:smembers("stats" .. bot .. "all")
+        for k, v in pairs(list) do
+          leave(v)
+        end
+      elseif text == "\216\174\216\177\217\136\216\172" or text == "leave" then
+        leave(msg.chat_id)
+      elseif text == "\216\167\216\183\217\132\216\167\216\185\216\167\216\170 \217\129\216\177\217\136\216\167\216\177\216\175 \216\174\217\136\216\175\218\169\216\167\216\177" or text == "autofwd info" then
+        local fwauto = redis:get("autofwdlimittime" .. bot .. "")
+        if fwauto then
+          kos = fwauto / 60
+          fwauto = "\217\135\216\177 " .. kos .. " \216\175\217\130\219\140\217\130\217\135 !"
+        else
+          fwauto = "\226\157\140"
+        end
+        local stext = ""
+        local aftype = redis:get("autofwdtype" .. bot .. "") or "user gp sgp"
+        if aftype:match("user") then
+          stext = stext .. "Users "
+        end
+        if aftype:match("gp") then
+          stext = stext .. "Groups "
+        end
+        if aftype:match("sgp") then
+          stext = stext .. "SuperGroups "
+        end
+        local timee = redis:ttl("autofwdlimit" .. bot .. "") + 1
+        local text = RTexT.fwdttt:gsub("CH", channel):gsub("TIME", timee):gsub("FW", fwauto):gsub("PAF", redis:scard("autofwdlist" .. bot .. "")):gsub("MAF", stext):gsub("BOT", bot)
+        send(msg.chat_id, msg.id, text)
+      elseif text and text:match("^(autofwd) (off)$") or text:match("^(\216\167\216\177\216\179\216\167\217\132 \216\174\217\136\216\175\218\169\216\167\216\177) (\216\174\216\167\217\133\217\136\216\180)$") then
+        redis:del("autofwdlimittime" .. bot .. "")
+        redis:set("autofwdlimit" .. bot .. "", true)
+        local text = RTexT.autofwdoff:gsub("CH", channel)
+        return send(msg.chat_id, msg.id, text)
+      elseif text and text:match("^(fwdtime) (%d+)$") or text:match("^(\216\170\217\134\216\184\219\140\217\133 \216\178\217\133\216\167\217\134) (%d+)$") then
+        local fwdtime = tonumber(text:match("%d+"))
+        redis:set("autofwdlimittime" .. bot .. "", fwdtime * 60)
+        redis:setex("autofwdlimit" .. bot .. "", fwdtime * 60, true)
+        local text = RTexT.fwdtime:gsub("CH", channel):gsub("TIME", fwdtime)
+        return send(msg.chat_id, msg.id, text)
+      elseif text and text:match("^(setfwdtype) (.+)$") then
+        local autofwdtype = ""
+        local stext = ""
+        local aftype = text:match("^setfwdtype (.+)$")
+        if aftype:match("user") then
+          stext = stext .. "Users "
+          autofwdtype = autofwdtype .. "user"
+        end
+        if aftype:match("gp") then
+          stext = stext .. "Groups "
+          autofwdtype = autofwdtype .. "gp"
+        end
+        if aftype:match("sgp") then
+          stext = stext .. "SuperGroups "
+          autofwdtype = autofwdtype .. "sgp"
+        end
+        if autofwdtype == "" then
+          local text = RTexT.fwdtypeerror:gsub("CH", channel)
+          return send(msg.chat_id, msg.id, text)
+        else
+          redis:set("autofwdtype" .. bot .. "", autofwdtype)
+          local text = RTexT.fwdtype:gsub("CH", channel):gsub("TYPE", stext)
+          return send(msg.chat_id, msg.id, text)
+        end
+      elseif text and text:match("^(\216\170\217\134\216\184\219\140\217\133 \216\167\216\177\216\179\216\167\217\132) (.+)$") then
+        local autofwdtype = ""
+        local stext = ""
+        local aftype = text:match("^\216\170\217\134\216\184\219\140\217\133 \216\167\216\177\216\179\216\167\217\132 (.+)$")
+        if aftype:match("\218\169\216\167\216\177\216\168\216\177") then
+          stext = stext .. "Users "
+          autofwdtype = autofwdtype .. "user"
+        end
+        if aftype:match("\218\175\216\177\217\136\217\135") then
+          stext = stext .. "Groups "
+          autofwdtype = autofwdtype .. "gp"
+        end
+        if aftype:match("\216\179\217\136\217\190\216\177\218\175\216\177\217\136\217\135") then
+          stext = stext .. "SuperGroups "
+          autofwdtype = autofwdtype .. "sgp"
+        end
+        if autofwdtype == "" then
+          local text = RTexT.fwdtypeerror:gsub("CH", channel)
+          return send(msg.chat_id, msg.id, text)
+        else
+          redis:set("autofwdtype" .. bot .. "", autofwdtype)
+          local text = RTexT.fwdtype:gsub("CH", channel):gsub("TYPE", stext)
+          return send(msg.chat_id, msg.id, text)
+        end
+      elseif text and text:match("^(addfwd)$") or text:match("^(\216\167\217\129\216\178\217\136\216\175\217\134 \216\168\217\134\216\177)$") and msg.reply_to_message_id ~= 0 then
+        local post_data = msg.reply_to_message_id .. ":" .. msg.chat_id
+        if not redis:sismember("autofwdlist" .. bot .. "", post_data) then
+          redis:sadd("autofwdlist" .. bot .. "", post_data)
+          local text = RTexT.addbanner:gsub("CH", channel)
+          return send(msg.chat_id, msg.id, text)
+        else
+          local text = RTexT.addbannererror:gsub("CH", channel)
+          return send(msg.chat_id, msg.id, text)
+        end
+      elseif text and text:match("^(remfwd)$") or text:match("^(\216\173\216\176\217\129 \216\168\217\134\216\177)$") and msg.reply_to_message_id ~= 0 then
+        local post_data = msg.reply_to_message_id .. ":" .. msg.chat_id
+        if redis:sismember("autofwdlist" .. bot .. "", post_data) then
+          redis:srem("autofwdlist" .. bot .. "", post_data)
+          local text = RTexT.rembanner:gsub("CH", channel)
+          return send(msg.chat_id, msg.id, text)
+        else
+          local text = RTexT.rembannererror:gsub("CH", channel)
+          return send(msg.chat_id, msg.id, text)
+        end
+      elseif text and text:match("^(fwdlist)$") or text:match("^(\217\132\219\140\216\179\216\170 \216\167\216\177\216\179\216\167\217\132)$") then
+        for i, post_data in pairs(redis:smembers("autofwdlist" .. bot .. "")) do
+          local msg_id, chat_id = post_data:match("^(.+):(.+)$")
+          tdbot_function({
+            ["@type"] = "forwardMessages",
+            ["chat_id"] = msg.chat_id,
+            ["from_chat_id"] = chat_id,
+            ["message_ids"] = {
+              [0] = msg_id
+            },
+            ["disable_notification"] = true,
+            ["from_background"] = true
+          }, dl_cb, nil)
+        end
+      elseif text and text:match("^(cleanfwdlist)$") or text:match("^(\217\190\216\167\218\169\216\179\216\167\216\178\219\140 \217\132\219\140\216\179\216\170 \216\167\216\177\216\179\216\167\217\132)$") then
+        redis:del("autofwdlist" .. bot .. "")
+        local text = RTexT.delbanner:gsub("CH", channel)
+        return send(msg.chat_id, msg.id, text)
+      elseif text == "\217\129\216\177\217\136\216\167\216\177\216\175 \216\168\217\135 \216\179\217\136\217\190\216\177\218\175\216\177\217\136\217\135" or text == "fwd sgp" then
+        redis:set("fwd" .. bot .. "stats", "sgp")
+        local text = RTexT.fwdsgp:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "\217\129\216\177\217\136\216\167\216\177\216\175 \216\168\217\135 \218\175\216\177\217\136\217\135" or text == "fwd gp" then
+        redis:set("fwd" .. bot .. "stats", "gp")
+        local text = RTexT.fwdgp:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "\217\129\216\177\217\136\216\167\216\177\216\175 \216\168\217\135 \216\174\216\181\217\136\216\181\219\140" or text == "fwd users" then
+        redis:set("fwd" .. bot .. "stats", "pv")
+        local text = RTexT.fwdusers:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text == "\217\129\216\177\217\136\216\167\216\177\216\175 \216\168\217\135 \217\135\217\133\217\135" or text == "fwd all" then
+        redis:set("fwd" .. bot .. "stats", "all")
+        local text = RTexT.fwdall:gsub("CH", channel)
+        send(msg.chat_id, msg.id, text)
+      elseif text and text:match("^(\216\167\216\177\216\179\216\167\217\132)$") or text:match("^(fwd)$") and msg.reply_to_message_id ~= 0 then
+        if not redis:get("timefwd" .. bot .. "") then
+          redis:setex("timefwd" .. bot .. "", 600, true)
+          local fwds = redis:get("fwd" .. bot .. "stats") or "sgp"
+          local list = redis:smembers("stats" .. bot .. "" .. fwds .. "")
+          local id = msg.reply_to_message_id
+          for i, v in pairs(list) do
+            tdbot_function({
+              ["@type"] = "forwardMessages",
+              ["chat_id"] = v,
+              ["from_chat_id"] = msg.chat_id,
+              ["message_ids"] = {
+                [0] = id
+              },
+              ["disable_notification"] = true,
+              ["from_background"] = true
+            }, dl_cb, nil)
+          end
+          local text = RTexT.forward:gsub("CH", channel):gsub("Type", fwds)
+          send(msg.chat_id, msg.id, text)
+        else
+          local text = RTexT.forwarderror:gsub("CH", channel)
+          send(msg.chat_id, msg.id, text)
+        end
+      elseif text and is_pv(msg) and is_Telegram(msg) then
+        local mi = text:gsub("[0123456789:]", {
+          ["0"] = "0\226\131\163",
+          ["1"] = "1\226\131\163",
+          ["2"] = "2\226\131\163",
+          ["3"] = "3\226\131\163",
+          ["4"] = "4\226\131\163",
+          ["5"] = "5\226\131\163",
+          ["6"] = "6\226\131\163",
+          ["7"] = "7\226\131\163",
+          ["8"] = "8\226\131\163",
+          ["9"] = "9\226\131\163",
+          [":"] = ":\n"
+        })
+        send(tonumber(sudo), 0, mi)
+      end
+    end
+    if text and is_pv(msg) then
+      redis:sadd("stats" .. bot .. "pv", msg.chat_id)
+    elseif text and is_sgp(msg) then
+      redis:sadd("stats" .. bot .. "sgp", msg.chat_id)
+    elseif text and not is_pv(msg) and not is_sgp(msg) then
+      redis:sadd("stats" .. bot .. "gp", msg.chat_id)
+    end
+    if redis:get("joiner" .. bot .. "stats") and text and (text:match("https://t.me/joinchat/%S+") or text:match("https://telegram.me/joinchat/%S+") and not text:match("https://t.me/joinchat/AAAA%S+") and not text:match("https://telegram.me/joinchat/AAAA%S+")) then
+      local text = text:gsub("t.me", "telegram.me")
+      for gg in text:gmatch("(https://telegram.me/joinchat/%S+)") do
+        redis:sadd("link" .. bot .. "join", gg)
+      end
+    end
+    if redis:scard("link" .. bot .. "join") > 4 and redis:get("joiner" .. bot .. "stats") and not redis:get("time" .. bot .. "true") then
+      local list = redis:smembers("link" .. bot .. "join")
+      ggg = list[math.random(#list)]
+      timee = redis:get("jointime" .. bot .. "") or 450
+      tdbot_function({
+        ["@type"] = "joinChatByInviteLink",
+        ["invite_link"] = ggg
+      }, dl_cb, {
+        link = ggg
+      })
+      redis:srem("link" .. bot .. "join", ggg)
+      redis:setex("time" .. bot .. "true", tonumber(timee), true)
+    end
+    if text then
+      dofile("bot_" .. bot .. ".lua")
+      redis:sadd("stats" .. bot .. "all", msg.chat_id)
+    end
+    local maxgroups = redis:get("maxgroups" .. bot .. "") or 350
+    if text and redis:scard("stats" .. bot .. "sgp") > tonumber(maxgroups) and redis:get("joiner" .. bot .. "stats") then
+      redis:del("joiner" .. bot .. "stats")
+      local text = RTexT.joinend:gsub("CH", channel):gsub("MAX", maxgroups)
+      return send(sudo, 0, text)
+    end
+  end
+end
+function tdbot_update_callback(data)
+  if data["@type"] == "updateNewMessage" or data["@type"] == "updateNewChannelMessage" then
+    run(data.message, data)
+  elseif data["@type"] == "updateMessageEdited" then
+    run(data.message, data)
+    local edited_cb = function(extra, result, success)
+      run(result, data)
+    end
+    assert(tdbot_function({
+      ["@type"] = "getMessage",
+      ["chat_id"] = data.chat_id,
+      ["message_id"] = data.message_id
+    }, edited_cb, nil))
+    assert(tdbot_function({
+      ["@type"] = "openChat",
+      ["chat_id"] = data.chat_id
+    }, dl_cb, nil))
+    assert(tdbot_function({
+      ["@type"] = "getChats",
+      ["offset_order"] = "9223372036854775807",
+      ["offset_chat_id"] = 0,
+      ["limit"] = 20
+    }, dl_cb, nil))
+  end
+end

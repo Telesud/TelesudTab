@@ -1,0 +1,48 @@
+prtred() {
+  printf '\e[1;31m%s\n\e[0;39;49m' "$@"
+}
+prtgrn() {
+  printf '\e[1;32m%s\n\e[0;39;49m' "$@"
+}
+prtbrown() {
+  printf '\e[1;33m%s\n\e[0;39;49m' "$@"
+}
+if [ "$1" = "launch" ]; then
+		if [ -z "$2" ]; then
+			prtred "Enter Your Bot-number :" 
+			read -rp ' ' BOT
+			while true
+			do
+			./tabchi.py $BOT
+			sleep 5
+			prtbrown "Bot Running !"
+			done
+		else
+			while true
+			do
+			./tabchi.py $2
+			sleep 5
+			prtbrown "Bot Running !"
+			done
+		fi
+elif [ "$1" = "install" ]; then
+ # wget https://Ir-techno.ir/td.so -O td.so
+ sudo apt-get -y update && sudo apt-get -y upgrade 
+ sudo apt-get --force-yes install git wget screen tmux libconfig9 libevent-dev libjansson4 libstdc++6 python2.7 python-pip unzip redis-server 
+	    sudo apt-get -y update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade && sudo apt-get -y autoremove
+		sudo service redis-server restart
+		sudo apt-get install python-setuptools
+		sudo pip install --upgrade pip
+		sudo pip install threading2
+		sudo pip install requests
+		sudo pip install redis
+		chmod 777 *
+		chmod +x *
+		 prtgrn "End Installing , Launch Your Tabchi With ./Telesud create"
+  elif [ "$1" = "auto" ]; then
+  	prtred "Enter Your Bot-number :" 
+	read -rp ' ' BOT
+	tmux kill-session -t "Tabchi_"$BOT
+	tmux new-session -d -s "Tabchi_"$BOT "./Tabchi launch "$BOT
+   tmux detach -s "Tabchi_"$BOT
+fi
