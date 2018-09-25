@@ -17,9 +17,9 @@ install:
 ```git clone https://github.com/Telesud/TelesudTab
 cd Telesud*
 chmod +x Telesud
-./Telesud install
-👇
-./Telesud create
+./Telesud install```
+Edit config.lua file:
+```./Telesud create
 ```
 
 #lunch one bot:
