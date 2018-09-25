@@ -19,9 +19,9 @@ cd Telesud*
 chmod +x Telesud
 ./Telesud install```
 
-#Edit config.lua file:
-```./Telesud create
-```
+#Edit config.lua file:👇
+
+./Telesud create```
 
 #lunch one bot:
 
